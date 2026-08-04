@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>工作待辦 - 個人工作管理系統</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="nav-mount"></div>
+<main class="app-main">
+  <div class="page-header">
+    <div>
+      <h1>✅ 工作待辦</h1>
+      <div class="page-sub">依專案分類管理你的工作項目</div>
+    </div>
+    <button class="btn btn-primary" id="addBtn">＋ 新增待辦</button>
+  </div>
+
+  <div id="categoryTabs" class="tabs" style="margin-bottom:12px"></div>
+  <div class="filter-bar">
+    <select id="statusFilter" style="width:auto"></select>
+    <select id="sortSelect" style="width:auto">
+      <option value="dueDate">依到期日排序</option>
+      <option value="priority">依優先級排序</option>
+      <option value="createdAt">依建立時間排序</option>
+    </select>
+  </div>
+
+  <div id="todoList" class="card-grid"></div>
+</main>
+
+<div id="todoModal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <h2 id="modalTitle">新增待辦事項</h2>
+    <form id="todoForm">
+      <div class="form-group">
+        <label>標題</label>
+        <input id="f_title" required placeholder="例如：整理採購對帳單">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>分類</label>
+          <select id="f_category"></select>
+        </div>
+        <div class="form-group">
+          <label>所屬專案（選填）</label>
+          <select id="f_projectId"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>優先級</label>
+          <select id="f_priority"></select>
+        </div>
+        <div class="form-group">
+          <label>狀態</label>
+          <select id="f_status"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>預計完成日</label>
+          <input type="date" id="f_dueDate">
+        </div>
+        <div class="form-group">
+          <label>預估工時（小時）</label>
+          <input type="number" id="f_estimatedHours" step="0.5" min="0">
+        </div>
+      </div>
+      <div class="form-group hidden" id="waitingGroup">
+        <label>等待對象／事由</label>
+        <input id="f_waitingOn" placeholder="例如：等王經理回覆">
+      </div>
+      <div class="form-group">
+        <label>備註</label>
+        <textarea id="f_note"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn" id="cancelBtn">取消</button>
+        <button type="submit" class="btn btn-primary">儲存</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="js/utils.js"></script>
+<script src="js/api.js"></script>
+<script src="js/nav.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('f_priority').innerHTML = PRIORITIES.map(c => `<option value="${c}">${c}</option>`).join('');
+    document.getElementById('f_status').innerHTML = STATUSES.map(c => `<option value="${c}">${c}</option>`).join('');
+  });
+</script>
+<script src="js/reminder.js"></script>
+<script src="js/todo.js"></script>
+</body>
+</html>

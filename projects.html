@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>專案管理 - 個人工作管理系統</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="nav-mount"></div>
+<main class="app-main">
+  <div class="page-header">
+    <div>
+      <h1>📁 專案管理</h1>
+      <div class="page-sub">追蹤每個專案的目標、進度與阻礙</div>
+    </div>
+    <button class="btn btn-primary" id="addBtn">＋ 新增專案</button>
+  </div>
+
+  <div id="projectList" class="card-grid"></div>
+</main>
+
+<div id="projectModal" class="modal-overlay hidden">
+  <div class="modal-box" style="max-width:560px">
+    <h2 id="modalTitle">新增專案</h2>
+    <form id="projectForm">
+      <div class="form-group">
+        <label>專案名稱</label>
+        <input id="f_name" required placeholder="例如：採購系統導入">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>分類</label>
+          <select id="f_category"></select>
+        </div>
+        <div class="form-group">
+          <label>負責人</label>
+          <input id="f_owner">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>目標</label>
+        <textarea id="f_goal"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>開始日期</label>
+          <input type="date" id="f_startDate">
+        </div>
+        <div class="form-group">
+          <label>預計完成日期</label>
+          <input type="date" id="f_dueDate">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>狀態</label>
+        <select id="f_status">
+          <option>未開始</option><option>進行中</option><option>暫停</option><option>已完成</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>阻礙事項</label>
+        <textarea id="f_blockers"></textarea>
+      </div>
+      <div class="form-group">
+        <label>下一步行動</label>
+        <textarea id="f_nextAction"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="checkbox-label"><input type="checkbox" id="f_useManualProgress"> 手動指定進度（否則自動用關聯待辦完成比例計算）</label>
+      </div>
+      <div class="form-group hidden" id="progressOverrideGroup">
+        <label>手動進度（%）</label>
+        <input type="number" id="f_progressOverride" min="0" max="100">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn" id="cancelBtn">取消</button>
+        <button type="submit" class="btn btn-primary">儲存</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="js/utils.js"></script>
+<script src="js/api.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/reminder.js"></script>
+<script src="js/projects.js"></script>
+</body>
+</html>

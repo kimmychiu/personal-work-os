@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>首頁 Dashboard - 個人工作管理系統</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="nav-mount"></div>
+<main class="app-main">
+  <div class="page-header">
+    <div>
+      <h1>👋 今天是 <span id="todayDate"></span></h1>
+      <div class="page-sub">個人工作管理系統 Dashboard</div>
+    </div>
+  </div>
+
+  <div class="section-title">🎯 今日三件最重要工作（MIT）</div>
+  <div class="card-grid" id="mitList" style="margin-bottom:22px"></div>
+
+  <div class="dash-grid">
+    <div class="card">
+      <div class="section-title">📅 今日行程</div>
+      <div id="todayEvents"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">✅ 今日待辦</div>
+      <div id="todayTodos"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">⏳ 等待他人回覆</div>
+      <div id="waitingList"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">🏁 已完成事項（今日）</div>
+      <div id="completedList"></div>
+    </div>
+  </div>
+</main>
+<script src="js/utils.js"></script>
+<script src="js/api.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/reminder.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>
