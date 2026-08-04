@@ -18,11 +18,18 @@
   </div>
 
   <div class="filter-bar">
+    <div class="tabs" id="calViewTabs">
+      <div class="tab active" data-mode="week">週檢視</div>
+      <div class="tab" data-mode="month">月檢視</div>
+    </div>
     <button class="btn btn-sm" id="prevWeekBtn">‹‹ 上週</button>
+    <button class="btn btn-sm hidden" id="prevMonthBtn">‹‹ 上月</button>
     <button class="btn btn-sm" id="todayBtn">回到今天</button>
     <button class="btn btn-sm" id="nextWeekBtn">下週 ››</button>
+    <button class="btn btn-sm hidden" id="nextMonthBtn">下月 ››</button>
   </div>
   <div id="weekStrip" class="cal-week-strip"></div>
+  <div id="monthGrid" class="cal-month-grid hidden"></div>
 
   <div class="card">
     <div class="page-header" style="margin-bottom:10px">

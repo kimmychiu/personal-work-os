@@ -1,5 +1,6 @@
 let selectedDate = todayStr();
 let editingEventId = null;
+let viewMode = 'week'; // 'week' | 'month'
 
 document.addEventListener('DOMContentLoaded', async () => {
   renderNav('calendar');
@@ -12,6 +13,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 function bindEvents() {
   document.getElementById('prevWeekBtn').addEventListener('click', () => { selectedDate = addDays(selectedDate, -7); render(); });
   document.getElementById('nextWeekBtn').addEventListener('click', () => { selectedDate = addDays(selectedDate, 7); render(); });
+  document.getElementById('prevMonthBtn').addEventListener('click', () => { selectedDate = shiftMonth(selectedDate, -1); render(); });
+  document.getElementById('nextMonthBtn').addEventListener('click', () => { selectedDate = shiftMonth(selectedDate, 1); render(); });
   document.getElementById('todayBtn').addEventListener('click', () => { selectedDate = todayStr(); render(); });
   document.getElementById('prevDayBtn').addEventListener('click', () => { selectedDate = addDays(selectedDate, -1); render(); });
   document.getElementById('nextDayBtn').addEventListener('click', () => { selectedDate = addDays(selectedDate, 1); render(); });
@@ -19,10 +22,28 @@ function bindEvents() {
   document.getElementById('cancelBtn').addEventListener('click', closeModal);
   document.getElementById('eventModal').addEventListener('click', (e) => { if (e.target.id === 'eventModal') closeModal(); });
   document.getElementById('eventForm').addEventListener('submit', onSubmit);
+  document.querySelectorAll('#calViewTabs .tab').forEach(t => t.addEventListener('click', () => {
+    viewMode = t.dataset.mode;
+    document.querySelectorAll('#calViewTabs .tab').forEach(x => x.classList.toggle('active', x === t));
+    document.getElementById('prevWeekBtn').classList.toggle('hidden', viewMode !== 'week');
+    document.getElementById('nextWeekBtn').classList.toggle('hidden', viewMode !== 'week');
+    document.getElementById('prevMonthBtn').classList.toggle('hidden', viewMode !== 'month');
+    document.getElementById('nextMonthBtn').classList.toggle('hidden', viewMode !== 'month');
+    document.getElementById('weekStrip').classList.toggle('hidden', viewMode !== 'week');
+    document.getElementById('monthGrid').classList.toggle('hidden', viewMode !== 'month');
+    render();
+  }));
+}
+
+function shiftMonth(dateStr, delta) {
+  const d = new Date(dateStr + 'T00:00:00');
+  d.setMonth(d.getMonth() + delta, 1); // 換月時固定停在該月 1 號，避免月底日期溢位
+  return formatDate(d);
 }
 
 function render() {
-  renderWeekStrip();
+  if (viewMode === 'week') renderWeekStrip();
+  else renderMonthGrid();
   renderDayHeader();
   renderEventList();
 }
@@ -38,6 +59,35 @@ function renderWeekStrip() {
     </div>
   `).join('');
   el.querySelectorAll('.cal-day-btn').forEach(b => b.addEventListener('click', () => { selectedDate = b.dataset.date; render(); }));
+}
+
+function renderMonthGrid() {
+  const el = document.getElementById('monthGrid');
+  const [y, m] = selectedDate.split('-').map(Number); // m: 1-12
+  const firstOfMonth = `${y}-${String(m).padStart(2, '0')}-01`;
+  const lastDayNum = new Date(y, m, 0).getDate(); // new Date(y, m, 0) = 該月最後一天
+  const lastOfMonth = `${y}-${String(m).padStart(2, '0')}-${String(lastDayNum).padStart(2, '0')}`;
+  const gridStart = getWeekStart(firstOfMonth); // 涵蓋整月所需的週一～週日格子範圍
+  const gridEnd = addDays(getWeekStart(lastOfMonth), 6);
+  const cells = [];
+  for (let d = gridStart; d <= gridEnd; d = addDays(d, 1)) cells.push(d);
+  const dowLabels = ['一', '二', '三', '四', '五', '六', '日'];
+  const dowHtml = dowLabels.map(l => `<div class="cal-month-dow">週${l}</div>`).join('');
+  const cellsHtml = cells.map(d => {
+    const inMonth = Number(d.split('-')[1]) === m;
+    const events = DB.CalendarEvents.filter(e => e.date === d);
+    const hasConflict = events.some(e => detectConflicts(e, e.id).length > 0);
+    const dots = events.slice(0, 4).map(e => `<span class="dot ${hasConflict ? 'conflict' : ''}"></span>`).join('');
+    const more = events.length > 4 ? `<span class="more">+${events.length - 4}</span>` : '';
+    return `
+      <div class="cal-month-cell ${inMonth ? '' : 'other-month'} ${d === todayStr() ? 'is-today' : ''} ${d === selectedDate ? 'is-selected' : ''}" data-date="${d}">
+        <div class="dom">${Number(d.split('-')[2])}</div>
+        <div class="dots">${dots}${more}</div>
+      </div>
+    `;
+  }).join('');
+  el.innerHTML = dowHtml + cellsHtml;
+  el.querySelectorAll('.cal-month-cell').forEach(c => c.addEventListener('click', () => { selectedDate = c.dataset.date; render(); }));
 }
 
 function renderDayHeader() {
