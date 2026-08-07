@@ -1,6 +1,7 @@
 const CHECKLIST_STATUSES = ['待處理', '待回覆', '已完成'];
 let currentChecklistStatus = '全部';
 let editingChecklistId = null;
+let pendingPhotoDataUrl = null; // 新選的照片（壓縮後的 data URL），還沒送出前先在這裡暫存
 
 document.addEventListener('DOMContentLoaded', async () => {
   renderNav('checklist');
@@ -32,6 +33,46 @@ function bindEvents() {
   document.getElementById('cancelBtn').addEventListener('click', closeModal);
   document.getElementById('checklistModal').addEventListener('click', (e) => { if (e.target.id === 'checklistModal') closeModal(); });
   document.getElementById('checklistForm').addEventListener('submit', onSubmit);
+  document.getElementById('f_photo').addEventListener('change', onPhotoSelected);
+}
+
+/** 讀取使用者選的照片，縮小尺寸/壓縮品質後轉成 data URL，避免上傳超大原始檔 */
+function compressImage(file, maxDim, quality) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) { height = Math.round(height * maxDim / width); width = maxDim; }
+          else { width = Math.round(width * maxDim / height); height = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function onPhotoSelected(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    pendingPhotoDataUrl = await compressImage(file, 1280, 0.7);
+    const preview = document.getElementById('photoPreview');
+    preview.src = pendingPhotoDataUrl;
+    preview.classList.remove('hidden');
+  } catch (err) {
+    toast('照片讀取失敗：' + err.message, true);
+  }
 }
 
 function render() {
@@ -54,6 +95,7 @@ function itemHtml(i) {
           </div>
         </div>
       </div>
+      ${i.photoUrl ? `<a href="${escapeHtml(i.photoUrl)}" target="_blank" rel="noopener"><img src="${escapeHtml(i.photoUrl)}" style="max-width:100%;max-height:160px;border-radius:8px;display:block;object-fit:cover"></a>` : ''}
       ${i.note ? `<div style="font-size:13px;color:var(--text-dim);white-space:pre-wrap">${escapeHtml(i.note)}</div>` : ''}
       <div class="tabs" style="align-self:flex-start">
         ${CHECKLIST_STATUSES.map(s => `<div class="tab ${i.status === s ? 'active' : ''}" data-act="setstatus" data-status="${s}" data-id="${i.id}">${s}</div>`).join('')}
@@ -83,12 +125,17 @@ function bindListEvents(el) {
 
 function openModal(id) {
   editingChecklistId = id || null;
+  pendingPhotoDataUrl = null;
   const i = id ? DB.ChecklistItems.find(x => x.id === id) : {};
   document.getElementById('modalTitle').textContent = id ? '編輯查核項目' : '新增查核項目';
   document.getElementById('f_product').value = i.product || '';
   document.getElementById('f_store').value = i.store || '';
   document.getElementById('f_note').value = i.note || '';
   document.getElementById('f_status').value = i.status || '待處理';
+  document.getElementById('f_photo').value = '';
+  const preview = document.getElementById('photoPreview');
+  if (i.photoUrl) { preview.src = i.photoUrl; preview.classList.remove('hidden'); }
+  else { preview.src = ''; preview.classList.add('hidden'); }
   document.getElementById('checklistModal').classList.remove('hidden');
 }
 
@@ -103,6 +150,15 @@ async function onSubmit(e) {
     status: document.getElementById('f_status').value
   };
   if (!data.product) { toast('請輸入商品', true); return; }
+  if (pendingPhotoDataUrl) {
+    if (isConfigured()) {
+      data.photoBase64 = pendingPhotoDataUrl.split(',')[1];
+      data.photoMimeType = 'image/jpeg';
+      data.photoFilename = (data.product || 'photo') + '.jpg';
+    } else {
+      data.photoUrl = pendingPhotoDataUrl; // 未設定雲端同步時，照片直接存在本機瀏覽器裡
+    }
+  }
   try {
     if (editingChecklistId) await apiUpdate('ChecklistItems', editingChecklistId, data);
     else await apiCreate('ChecklistItems', data);
